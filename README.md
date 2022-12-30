@@ -39,7 +39,7 @@ var
     sys : PyObject
     scriptLoaded = false
 
-type sympyCall = object 
+type SympyCall = object 
     call : string
     argument: string
         
@@ -55,7 +55,6 @@ proc loadScript(folder:string)=
     except:
         scriptLoaded = false
 
-
 proc parse(equation:string):cstring=
     return parseEquation.parse(equation).to(string).cstring
 
@@ -63,9 +62,12 @@ proc calculate(equation:string):cstring=
     return parseEquation.calculate(equation).to(string).cstring
 
 proc callSympy*(call: cstring):cstring{.exportc.}=
-    let calling = ($call).fromJson(sympyCall)
-    echo calling
-            
+    var calling : SympyCall 
+    try:
+        calling = ($call).fromJson(SympyCall)
+    except:
+        discard
+    echo calling  
     if scriptLoaded:
         if calling.call == "parse":
             return parse(calling.argument)
@@ -84,6 +86,8 @@ proc callSympy*(call: cstring):cstring{.exportc.}=
                 echo "Failed to load Sympy"
                 return "Failed".cstring
     return "Can not run Python call".cstring
+
+#echo callSympy("""{"call":"init", "argument": "/tmp"}""")
 ```
 So what this script does: It reads a python module at the compile time and when initialized it writes it back to disk making a usable module. After the initialization it does parsing and calls to Python. Sure it has some overhead but it is not critical at all.
 To compile a nim file as a static library all what is needed  is
