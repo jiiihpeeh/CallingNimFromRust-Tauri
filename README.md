@@ -23,7 +23,7 @@ Backend documentation
 
 https://nim-lang.org/docs/backends.html
 
-Here we have parse_equation.nim
+Here is parse_equation.nim
 ```
 import nimpy,std/os, jsony
 proc getModule():string{.compileTime.} =
