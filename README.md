@@ -7,10 +7,10 @@ Why: Rust can be a huge pain in the ass for beginners. Nailing it takes time. It
 
 Target: Tauri.
 
-What this is not for: If you need to make humongous amounts of calls - this is a bit closer to socket communication considering performance which means type conversions and serialization.
-
-
 Since  Tauri is my target it is enough to pass strings as arguments and return strings.
+The whole Tauri's Rust business is bit wacky without bindings. Rust is a modern language being somewhere between C and C++  which is very low level considering javascript. 
+
+What this is not for: If you need to make humongous amounts of calls - this is a bit closer to socket communication considering performance which means type conversions and serialization.
 
 
 Brief version --- more details coming
