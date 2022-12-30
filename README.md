@@ -99,7 +99,7 @@ nim c -d:release --app:staticLib --noMain  parse_equation.nim
 Simple!
 
 
-Let's look at main.rs
+Let's look at src/main.rs
 ```
 use libc::c_char;
 use std::ffi::CStr;
@@ -132,6 +132,27 @@ fn main(){
 ````
 The hardest part here is to map cstring in a right way.
 So, why didn't I use Pyo3? I did at first, it shows how complicated it can become. Like grabbing a variable outside gil scope is hard if you are not used to it. Besides once figured it is now easy to make these Rust to Nim calls - see the goal - it becomes more universal.
+
+In order to build it succesfully, build.rs file is needed.
+````
+fn main() {
+  // tell rustc to link with some libhello.a library
+  println!("cargo:rustc-link=parse_equation");
+  // and it should search the Cargo.toml directory for that library
+  println!("cargo:rustc-link-search={}", std::env::var("CARGO_MANIFEST_DIR").unwrap());
+  //Note that line below has to be uncommented in case for Tauri
+  //tauri_build::build()
+}
+````
+Compiled static library libparse_equation.a needs to be renamed as liblibparse_equation.a and needs to be put into the project's root directory.
+
+
+Release binary can be complied by running
+````
+cargo run build --release
+````
+
+
 
 
 Sources
