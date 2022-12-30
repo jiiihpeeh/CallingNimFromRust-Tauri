@@ -25,30 +25,27 @@ https://nim-lang.org/docs/backends.html
 
 Here is parse_equation.nim
 ```
-import nimpy,std/os, jsony
+import std/os, jsony, supersnappy,nimpy
 proc getModule():string{.compileTime.} =
-    return readFile("parse_equation.py")
+    return compress(readFile("parse_equation.py"))
 
 const parseEquationModule = getModule()
 const fileName = "parse_equation.py"
 var 
     parseEquation : PyObject
     sys : PyObject
-
-var scriptLoaded = false
+    scriptLoaded = false
 
 type sympyCall = object 
     call : string
     argument: string
         
-
-
-proc loadScript(folder:cstring)=
+proc loadScript(folder:string)=
     try:
         sys = pyImport("sys")
-        let path = joinPath($folder, fileName)
-        path.writeFile(parseEquationModule)
-        discard sys.path.append(folder)
+        let path = joinPath(folder, fileName)
+        path.writeFile(uncompress(parseEquationModule))
+        discard sys.path.append(folder.cstring)
         let moduleName = fileName[0..^4].cstring
         parseEquation = pyImport(moduleName)
         scriptLoaded = true
@@ -56,10 +53,10 @@ proc loadScript(folder:cstring)=
         scriptLoaded = false
 
 
-proc parse(equation:cstring):cstring=
+proc parse(equation:string):cstring=
     return parseEquation.parse(equation).to(string).cstring
 
-proc calculate(equation:cstring):cstring=
+proc calculate(equation:string):cstring=
     return parseEquation.calculate(equation).to(string).cstring
 
 proc callSympy*(call: cstring):cstring{.exportc.}=
@@ -76,7 +73,7 @@ proc callSympy*(call: cstring):cstring{.exportc.}=
     else:
         if calling.call == "init":
             echo "initializing Python"
-            loadScript(calling.argument)
+            loadScript($calling.argument)
             if scriptLoaded:
                 echo "Succesfully loaded SymPy"
                 return "Success".cstring
