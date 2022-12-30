@@ -85,7 +85,7 @@ proc callSympy*(call: cstring):cstring{.exportc.}=
                 return "Failed".cstring
     return "Can not run Python call".cstring
 ```
-So what this script does: It reads a python module at compile time and when initialized it writes it back to disk making a usable module. After the initialization it makes parsing and calls to Python.
+So what this script does: It reads a python module at compile time and when initialized it writes it back to disk making a usable module. After the initialization it does parsing and calls to Python.
 To compile a nim file as a static library all what is needed  is
 
 ```
