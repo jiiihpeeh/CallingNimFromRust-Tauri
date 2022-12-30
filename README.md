@@ -26,11 +26,14 @@ https://nim-lang.org/docs/backends.html
 Here is parse_equation.nim
 ```
 import std/os, jsony, supersnappy,nimpy
+
+
+const fileName = "parse_equation.py"
+
 proc getModule():string{.compileTime.} =
-    return compress(readFile("parse_equation.py"))
+    return compress(readFile(fileName))
 
 const parseEquationModule = getModule()
-const fileName = "parse_equation.py"
 var 
     parseEquation : PyObject
     sys : PyObject
@@ -73,7 +76,7 @@ proc callSympy*(call: cstring):cstring{.exportc.}=
     else:
         if calling.call == "init":
             echo "initializing Python"
-            loadScript($calling.argument)
+            loadScript(calling.argument)
             if scriptLoaded:
                 echo "Succesfully loaded SymPy"
                 return "Success".cstring
