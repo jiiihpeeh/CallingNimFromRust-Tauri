@@ -131,7 +131,7 @@ fn main(){
 }
 ````
 The hardest part here is to map cstring in a right way.
-So, why didn't I use Pyo3? I did at first, it shows how complicated it can become. Like grabbing a variable outside gil scope is hard if you are not used to it. Besides once figured it is now easy to make these Rust to Nim calls - see the goal - it becomes more universal.
+So, why didn't I use Pyo3? I did at first, it shows how complicated it can become. Like grabbing a variable outside gil scope is hard if you are not used to it. Besides once figured it is  easy to make these Rust to Nim calls now - see the goal - it becomes more universal.
 
 In order to build it succesfully, build.rs file is needed.
 ````
