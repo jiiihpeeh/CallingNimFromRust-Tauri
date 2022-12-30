@@ -133,8 +133,13 @@ So, why didn't I use Pyo3? I did at first, it shows how complicated it can becom
 Sources
 
 https://github.com/MhadhbiXissam/Example-call-nim-string-from-rust/blob/main/src/main.rs
+
 https://stackoverflow.com/questions/59879692/how-to-call-a-nim-function-from-rust-through-c-ffi#59883589
+
 https://users.rust-lang.org/t/converting-str-to-const-c-char/23115
+
 https://stackoverflow.com/questions/70005417/converting-raw-string-to-string-in-rust
+
 https://nim-lang.org/docs/backends.html
+
 https://users.rust-lang.org/t/how-to-call-the-c-lib-static-library-from-rust/63333/6
