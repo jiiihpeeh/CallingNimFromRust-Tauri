@@ -13,10 +13,10 @@ What this is not for: If you need to make humongous amounts of calls - this is a
 Since  Tauri is my target it is enough to pass strings as arguments and return strings.
 
 
-###Brief version --- more details coming
+Brief version --- more details coming
 
 
-There are some sources that use nim generated dynamic libraries. I'm going to take a different route. Once we use a śtatic library we are dealing less with configuration, plausible directory changes , versioning and  other files.
+There are some sources that use nim generated dynamic libraries. I'm going to take a different route. Once we use a śtatic library we are dealing less with configuration, plausible directory changes, versioning and  other files.
 
 
 Backend documentation
@@ -85,8 +85,8 @@ proc callSympy*(call: cstring):cstring{.exportc.}=
                 return "Failed".cstring
     return "Can not run Python call".cstring
 ```
-So what this script does: It reads a python module at compile time and when initialized it writes it back to disk making a usable module. After initialization it makes parsing and  calls to Python.
-To compile nim file as a static library all what is needed to be done is
+So what this script does: It reads a python module at compile time and when initialized it writes it back to disk making a usable module. After the initialization it makes parsing and calls to Python.
+To compile a nim file as a static library all what is needed  is
 
 ```
 nim c -d:release --app:staticLib --noMain  parse_equation.nim
@@ -127,4 +127,4 @@ fn main(){
 }
 ````
 The hardest part here is to map cstring in a right way.
-So, why didn't I use Pyo3? I did at first, it shows how complicated it can become. Like grabbing a variable outside gil scope is hard if you are not used to it. Besides once figured it is now easy to make these Rust to Nim calls and see the goal - it becomes more universal.
+So, why didn't I use Pyo3? I did at first, it shows how complicated it can become. Like grabbing a variable outside gil scope is hard if you are not used to it. Besides once figured it is now easy to make these Rust to Nim calls - see the goal - it becomes more universal.
