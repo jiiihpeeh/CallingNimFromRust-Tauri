@@ -47,7 +47,7 @@ proc loadScript(folder:string): bool=
     try:
         echo "loading sys"
         let pyEnv = getEnv("PYTHONHOME")
-        #check PYHONHOME to solve problems with AppImage
+        #check PYTHONHOME to solve problems with AppImage
         if pyEnv.startsWith("/tmp/.mount"):
             let newPath = "/" & pyEnv.split("/")[3..^1].join("/")
             putEnv("PYTHONHOME", newPath)
