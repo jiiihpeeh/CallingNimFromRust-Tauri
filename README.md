@@ -23,9 +23,9 @@ Backend documentation
 
 https://nim-lang.org/docs/backends.html
 
-Here is parse_equation.nim
+Here is the parse_equation.nim
 ```
-import std/os, jsony, supersnappy,nimpy
+import std/os, jsony, supersnappy,nimpy, std/strutils
 
 
 const fileName = "parse_equation.py"
@@ -43,51 +43,76 @@ type SympyCall = object
     call : string
     argument: string
         
-proc loadScript(folder:string)=
+proc loadScript(folder:string): bool=
     try:
+        echo "loading sys"
+        let pyEnv = getEnv("PYTHONHOME")
+        #check PYHONHOME to solve problems with AppImage
+        if pyEnv.startsWith("/tmp/.mount"):
+            let newPath = "/" & pyEnv.split("/")[3..^1].join("/")
+            putEnv("PYTHONHOME", newPath)
+        echo "PYTHONHOME " & getEnv("PYTHONHOME")
         sys = pyImport("sys")
+        echo "imported sys"
+        discard sys.path.append("/usr/")
+        echo "appended usr"
+
         let path = joinPath(folder, fileName)
         path.writeFile(uncompress(parseEquationModule))
         discard sys.path.append(folder.cstring)
         let moduleName = fileName[0..^4].cstring
         parseEquation = pyImport(moduleName)
-        scriptLoaded = true
+        return true
     except:
-        scriptLoaded = false
+        return false
+
 
 proc parse(equation:string):cstring=
-    return parseEquation.parse(equation).to(string).cstring
+    try:
+        return parseEquation.parse(equation).to(string).cstring
+    except:
+        return "Failed".cstring
 
 proc calculate(equation:string):cstring=
-    return parseEquation.calculate(equation).to(string).cstring
+    try:
+        return parseEquation.calculate(equation).to(string).cstring
+    except:
+        return "False".cstring
 
 proc callSympy*(call: cstring):cstring{.exportc.}=
+    #echo "CALLER"
     var calling : SympyCall 
     try:
+        echo "NimPy: " & $call
         calling = ($call).fromJson(SympyCall)
     except:
         discard
-    echo calling  
+
+    echo calling
+            
     if scriptLoaded:
         if calling.call == "parse":
             return parse(calling.argument)
         elif calling.call  == "calculate":
             return calculate(calling.argument)
+        elif calling.call == "init":
+            return "Initialized".cstring
         else:
             return "Unknown method".cstring
     else:
         if calling.call == "init":
             echo "initializing Python"
-            loadScript(calling.argument)
+            scriptLoaded = loadScript(calling.argument)
             if scriptLoaded:
                 echo "Succesfully loaded SymPy"
-                return "Success".cstring
+                return "Initialized".cstring
             else:
                 echo "Failed to load Sympy"
                 return "Failed".cstring
     return "Can not run Python call".cstring
 
 #echo callSympy("""{"call":"init", "argument": "/tmp"}""")
+
 ```
 So what this script does: It reads a python module at the compile time and when initialized it writes it back to disk making a usable module. After the initialization it does parsing and calls to Python. Sure it has some overhead but it is not critical at all.
 To compile a nim file as a static library all what is needed  is
