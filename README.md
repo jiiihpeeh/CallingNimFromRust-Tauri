@@ -54,9 +54,6 @@ proc loadScript(folder:string): bool=
         echo "PYTHONHOME " & getEnv("PYTHONHOME")
         sys = pyImport("sys")
         echo "imported sys"
-        discard sys.path.append("/usr/")
-        echo "appended usr"
-
         let path = joinPath(folder, fileName)
         path.writeFile(uncompress(parseEquationModule))
         discard sys.path.append(folder.cstring)
