@@ -155,7 +155,7 @@ fn main(){
 The hardest part here is to map cstring in a right way.
 So, why didn't I use Pyo3? I did at first, it shows how complicated it can become. For instance grabbing a variable outside gil's scope is hard if you are not used to it. Besides once figured it is  easy to make these Rust to Nim calls now - see the goal - it becomes more universal.
 
-In order to build it succesfully, build.rs file is needed.
+In order to build it succesfully, `build.rs` file is needed (Rust part of the project's root directory).
 ````
 fn main() {
   // tell rustc to link with some libhello.a library
