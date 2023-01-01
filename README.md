@@ -23,7 +23,7 @@ Backend documentation
 
 https://nim-lang.org/docs/backends.html
 
-Here is the parse_equation.nim
+Here is the `parse_equation.nim`
 ```
 import std/os, jsony, supersnappy,nimpy, std/strutils
 
@@ -121,7 +121,7 @@ nim c -d:release --app:staticLib --noMain  parse_equation.nim
 Simple!
 
 
-Let's look at src/main.rs
+Let's look at `src/main.rs`
 ```
 use libc::c_char;
 use std::ffi::CStr;
@@ -166,7 +166,7 @@ fn main() {
   //tauri_build::build()
 }
 ````
-Compiled static library libparse_equation.a needs to be renamed as liblibparse_equation.a and needs to be put into the project's root directory.
+Compiled static library `libparse_equation.a` needs to be renamed as `liblibparse_equation.a` and needs to be put into the project's root directory (the Rust part).
 
 
 Release binary can be complied by running
