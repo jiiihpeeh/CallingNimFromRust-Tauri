@@ -179,7 +179,8 @@ proc callNim*(call: cstring):cstring{.exportc.}=
 
 #echo callSympy("""{"call":"init", "argument": "/tmp"}""")
 ```
-So what this script does: It reads a python module at the compile time and when initialized it writes it back to a disk making a usable module. Yes, I probably should use dunder methods here aka `__method__` but Nim makes it hard and the time penalty is rather low. After the initialization it does parsing and calls to Python. Sure it has some overhead but it is not critical at all.
+So what this script does: It reads a python module at the compile time and when initialized it writes it back to a disk making a usable module. Yes, I probably should use dunder methods here aka `__method__` but Nim makes it hard and the time penalty is rather low. After the initialization it does parsing and calls to Python. Sure it has some overhead but it is not critical at all. And why I run commands through nim? Well, it is easy and needs some setup while it is doable through Tauri api.
+
 To compile a nim file as a static library all what is needed  is
 
 ```
