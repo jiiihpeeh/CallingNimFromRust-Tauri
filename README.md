@@ -27,7 +27,6 @@ Here is the `parse_equation.nim`
 ```
 import std/[os,osproc,strutils, tempfiles], jsony, supersnappy,nimpy
 
-
 const fileName = "parse_equation.py"
 
 proc getModule():string{.compileTime.} =
@@ -48,14 +47,12 @@ type
         path: string
 
     LaTeXFile = object 
-        content: string
-        target: string 
+        content,target: string 
 
 when defined windows:
     const lateXBins = ["xelatex.exe", "pdflatex.exe"]
 else:
     const lateXBins = ["xelatex", "pdflatex"]
-
 
 proc loadScript(folder:string): bool=
     try:
@@ -147,25 +144,16 @@ proc callNim*(call: cstring):cstring{.exportc.}=
         discard
 
     echo calling
-
-    if calling.call == "runLatex":
+    case calling.call:
+    of "runLaTex":
         return runLaTeX(calling.argument)
-    if calling.call == "hasLatex":
+    of "hasLatex":
         return hasLatex()
-    if calling.call == "write":
+    of "write":
         return writeFileToPath(calling.argument)
-    if scriptLoaded:
-        if calling.call == "parse":
-            return parse(calling.argument)
-        elif calling.call  == "calculate":
-            return calculate(calling.argument)
-        elif calling.call == "init":
-            return "true".cstring
-        else:
-            return "false".cstring
-    else:
-        if calling.call == "init":
-            echo "initializing Python"
+    of "init":
+        echo "initializing Python"
+        if not scriptLoaded:
             scriptLoaded = loadScript(calling.argument)
             if scriptLoaded:
                 echo "Succesfully loaded SymPy"
@@ -173,11 +161,18 @@ proc callNim*(call: cstring):cstring{.exportc.}=
             else:
                 echo "Failed to load Sympy"
                 return "false".cstring
-
-
-    return "Can not run call".cstring
+        else:
+            echo "Succesfully loaded SymPy"
+            return "true".cstring
+    of "parse":
+        return parse(calling.argument)
+    of "calculate":
+        return calculate(calling.argument)
+    
+    return "false".cstring
 
 #echo callSympy("""{"call":"init", "argument": "/tmp"}""")
+
 ```
 So what this script does: It reads a python module at the compile time and when initialized it writes it back to a disk making a usable module. Yes, I probably should use dunder methods here aka `__method__` but Nim makes it hard and the time penalty is rather low. After the initialization it does parsing and calls to Python. Sure it has some overhead but it is not critical at all. And why I run commands through nim? Well, it is easy and needs some setup which would require lost of await and import stuff via Tauri api.
 
