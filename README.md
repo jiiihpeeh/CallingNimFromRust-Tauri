@@ -13,7 +13,7 @@ The whole Tauri's Rust business is bit wacky without bindings. Rust is a modern 
 What this is not for: If you need to make humongous amounts of calls - this is a bit closer to socket communication considering performance which means type conversions and serialization. 
 
 
-To be considered: I'd think that in case you need more speed and ease of use `protobuf` could serve you better. 
+To be considered: I'd think that in case you need more speed and ease of use `protobuf` could serve you better. (https://github.com/PMunch/protobuf-nim). 
 
 
 Brief version --- more details coming
