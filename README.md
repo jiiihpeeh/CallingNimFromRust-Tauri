@@ -13,7 +13,7 @@ The whole Tauri's Rust business is bit wacky without bindings. Rust is a modern 
 What this is not for: If you need to make humongous amounts of calls - this is a bit closer to socket communication considering performance which means type conversions and serialization. 
 
 
-To be considered: I'd think that in case you need more speed and ease of use `protobuf` could serve you better. (https://github.com/PMunch/protobuf-nim). 
+To be considered: I'd think that in case you need more speed and ease of use `protobuf` could serve you better. (https://github.com/PMunch/protobuf-nim). This afaik should use websockets. If communication is not constrained, I'd prefer not to occupy sockets. However, even this phase can be done via websockets provided by Nim either as a static lib or an external binary. An external binary should make it easier but a static library makes it easier to claim port numbers and such. 
 
 
 Brief version --- more details coming
