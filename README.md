@@ -28,7 +28,7 @@ https://nim-lang.org/docs/backends.html
 
 Here is the `parse_equation.nim`
 ```
-import std/[os,osproc,strutils, tempfiles], jsony, supersnappy,nimpy
+import std/[os,osproc,strutils, tempfiles, base64], jsony, supersnappy,nimpy, pixie/fileformats/[svg, png], pixie
 
 const fileName = "parse_equation.py"
 
@@ -42,20 +42,71 @@ var
     scriptLoaded = false
 
 type 
-    NimCall = object 
-        call, argument: string
-
     LaTeXPath = object 
-        exists: bool 
-        path: string
+        exists: bool
+        path : string
 
-    LaTeXFile = object 
-        content,target: string 
+    PngEncode = object 
+        result: bool 
+        base64: string
+
+    Call = enum 
+        runLatex = 0
+        hasLatex = 1
+        write = 2
+        init = 3
+        parse = 4
+        calculate = 5
+        saveSvgAsPng = 6
+        getPngFromSvg = 7
+
+    CallObject = object 
+        case call : Call
+        of runLatex, saveSVGasPNG, write:
+            content,target: string
+        of hasLatex:
+            discard
+        of init:
+            folder: string
+        of parse, calculate:
+            argument: string
+        of getPngFromSvg:
+            svgString: string
+
 
 when defined windows:
     const lateXBins = ["xelatex.exe", "pdflatex.exe"]
 else:
     const lateXBins = ["xelatex", "pdflatex"]
+
+
+#let None = pyBuiltins().None
+
+# template with_py(context: typed, name: untyped, body: untyped) =
+#   try:
+#     # Can't use the `.` template
+#     let name = callMethod(context, "__enter__")  # context.__enter__()
+#     body
+#   finally:
+#     discard callMethod(context, "__exit__", None, None, None)
+
+template withExecptions(actions: untyped): cstring =
+    var output : cstring
+    try:
+        actions
+        output = "true".cstring
+    except:
+        output = "false".cstring
+    output
+
+template withOutputExecption(action: untyped): cstring =
+    var output : cstring
+    try:
+        output = action
+    except:
+        output = "false".cstring
+    output
+
 
 proc loadScript(folder:string): bool=
     try:
@@ -74,7 +125,7 @@ proc loadScript(folder:string): bool=
         let pychacheDir = joinPath(folder,"__pycache__")
         if dirExists(pychacheDir):
             removeDir(pychacheDir)
-        path.writeFile(uncompress(parseEquationModule))
+        path.writeFile parseEquationModule.uncompress
         discard sys.path.append(folder.cstring)
         let moduleName = fileName[0..^4].cstring
         parseEquation = pyImport(moduleName)
@@ -94,70 +145,84 @@ proc getLateXPath():LaTeXPath=
 proc hasLatex():cstring=
     return toJson(getLatexPath()).cstring
 
-proc runLaTeX(args: string):cstring=
-    try:
-        let latexBin = getLatexPath()
-        if latexBin.exists:
-            let 
-                fileInfo = args.fromJson(LaTeXFile)
-                curDir = getCurrentDir()
-                tempDir = createTempDir("errorshavelimits", "_temp")
-            setCurrentDir(tempDir)
-            writeFile("temp.tex", fileInfo.content)
-            let exitCode = execCmd(latexBin.path & " temp.tex")
-            if exitCode == 0:
-                moveFile("temp.pdf", fileInfo.target)
-                setCurrentDir(curDir)
-                removeDir(tempDir)
-                return "true".cstring
-            else:
-                setCurrentDir(curDir)
-                removeDir(tempDir)
-        return "false".cstring
-    except:
-        return "false".cstring
+proc runLaTeX(content: string, target: string)=
+    let latexBin = getLatexPath()
+    if latexBin.exists:
+        let 
+            curDir = getCurrentDir()
+            tempDir = createTempDir("errorshavelimits", "_temp")
+        tempDir.setCurrentDir
+        "temp.tex".writeFile content
+        let exitCode = execCmd(latexBin.path & " temp.tex")
+        if exitCode == 0:
+            "temp.pdf".moveFile target
+            curDir.setCurrentDir
+            tempDir.removeDir
+        else:
+            curDir.setCurrentDir
+            tempDir.removeDir
 
-proc writeFileToPath(args:string):cstring=
-    try:
-        let fileInfo = args.fromJson(LaTeXFile)
-        writeFile(fileInfo.target, fileInfo.content)
-        return "true".cstring
-    except:
-        return "false".cstring
+proc writeFileToPath(content: string, target: string)=
+    target.writeFile content
+
 
 proc parse(equation:string):cstring=
-    try:
-        return parseEquation.parse(equation).to(string).cstring
-    except:
-        return "false".cstring
+    return parseEquation.parse(equation).to(string).cstring
+
 
 proc calculate(equation:string):cstring=
+    return parseEquation.calculate(equation).to(string).cstring
+
+
+proc svgToPng(svg:string):string =
+    let 
+        img =  newImage(parseSvg(svg))
+        wt = img.width.float32
+        ht = img.height.float32
+        scaleF = 0.02
+        x = wt * scaleF
+        y = ht * scaleF
+        image = newImage(x.int, y.int)
+    image.fill(rgba(255, 255, 255, 255))
+
+    image.draw(img,scale(vec2(scaleF, scaleF)))
+    result = encodePng(image)
+
+proc getPngFromSvg(svg:string):cstring=
     try:
-        return parseEquation.calculate(equation).to(string).cstring
+        let png = svgToPng(svg)
+        result = PngEncode( result: true, base64: encode(png)).toJson.cstring
     except:
-        return "false".cstring
-    
+        result = PngEncode( result: false, base64: "").toJson.cstring
+
+proc saveSvgAsPng(content: string, target: string)=
+    let png = svgToPng(content)
+    target.writeFile png
+
+
 proc callNim*(call: cstring):cstring{.exportc.}=
     #echo "CALLER"
-    var calling : NimCall 
+    var calling : CallObject 
     try:
         #echo "NimPy: " & $call
-        calling = ($call).fromJson(NimCall)
+        calling = ($call).fromJson(CallObject)
     except:
         discard
 
     echo calling
     case calling.call:
-    of "runLaTex":
-        return runLaTeX(calling.argument)
-    of "hasLatex":
+    of runLaTex:
+        result = withExecptions: 
+            runLaTeX(calling.content, calling.target)
+    of hasLatex:
         return hasLatex()
-    of "write":
-        return writeFileToPath(calling.argument)
-    of "init":
+    of write:
+        result = withExecptions: 
+            writeFileToPath(calling.content, calling.target)
+    of init:
         echo "initializing Python"
         if not scriptLoaded:
-            scriptLoaded = loadScript(calling.argument)
+            scriptLoaded = loadScript(calling.folder)
             if scriptLoaded:
                 echo "Succesfully loaded SymPy"
                 return "true".cstring
@@ -167,14 +232,20 @@ proc callNim*(call: cstring):cstring{.exportc.}=
         else:
             echo "Succesfully loaded SymPy"
             return "true".cstring
-    of "parse":
-        return parse(calling.argument)
-    of "calculate":
-        return calculate(calling.argument)
-    
-    return "false".cstring
+    of parse:
+        result = withOutputExecption:
+            parse(calling.argument)
+            
+    of calculate:
+        result = withOutputExecption:
+            calculate(calling.argument)
+        
+    of saveSVGasPNG:
+        result = withExecptions: 
+            saveSvgAsPng(calling.content, calling.target)
+    of getPngFromSvg:
+        return getPngFromSvg(calling.svgString)
 
-#echo callSympy("""{"call":"init", "argument": "/tmp"}""")
 
 ```
 So what this script does: It reads a python module at the compile time and when initialized it writes it back to a disk making a usable module. Yes, I probably should use dunder methods here aka `__method__` but Nim makes it hard and the time penalty is rather low. After the initialization it does parsing and calls to Python. Sure it has some overhead but it is not critical at all. And why I run commands through nim? Well, it is easy and needs some setup which would require lost of await and import stuff via Tauri api.
