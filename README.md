@@ -258,7 +258,7 @@ nim c -d:release --app:staticLib --noMain  parse_equation.nim
 If you have issues with memory management try this
 
 ```
-nim c -d:release --app:staticLib --noMain  --gc:boehm
+nim c -d:release --app:staticLib --noMain  --gc:boehm parse_equation.nim
 ```
 
 
