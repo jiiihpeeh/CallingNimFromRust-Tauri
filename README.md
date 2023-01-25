@@ -255,6 +255,12 @@ To compile a nim file as a static library all what is needed  is
 ```
 nim c -d:release --app:staticLib --noMain  parse_equation.nim
 ```
+If you have issues with memory management try this
+
+```
+nim c -d:release --app:staticLib --noMain  --gc:boehm
+```
+
 
 Simple!
 
